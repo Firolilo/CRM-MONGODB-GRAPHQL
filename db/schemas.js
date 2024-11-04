@@ -3,7 +3,7 @@ const {Query} = require("mongoose");
 
 const typeDefs = gql`
 type Query {
-    obtenerCurso:String
+    obtenerUsuario(token:String): Usuario
 }
 
 type Usuario {
@@ -14,6 +14,10 @@ type Usuario {
     creado: String
 }
 
+type Token {
+    token: String
+}
+
 input inputUsuario{
     nombre: String
     apellido: String
@@ -21,8 +25,14 @@ input inputUsuario{
     password: String
 }
 
+input inputAutenticar{
+    email: String
+    password: String
+}
+
 type Mutation {
     nuevoUsuario(input:inputUsuario) : Usuario
+    autenticarUsuario(input:inputAutenticar) : Token
 }
 `;
 module.exports = typeDefs;
