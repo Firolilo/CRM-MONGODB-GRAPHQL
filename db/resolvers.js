@@ -1,4 +1,5 @@
 const Usuario = require('../models/usuario');
+const Producto = require('../models/producto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -11,11 +12,27 @@ const crearToken = (usuario, palabrasecreta, expiresIn) => {
 require('dotenv').config({path:'variables.env'});
 
 
-
 const resolvers = {
     Query: {
         obtenerUsuario:async (_, {token}) => {
             return jwt.verify(token, process.env.FIRMA_SECRETA);
+        },
+        obtenerProducto: async () => {
+            try {
+                const productos = await Producto.find({});
+                return productos;
+            } catch (error){
+                console.log(error);
+            }
+
+        },
+        obtenerProductoPorID: async (_, { id })=>{
+            //Verificar que el producto existe
+            const producto = await Producto.findById(id);
+            if(!producto){
+                throw new Error(`El producto con ese ID: ${id},  no existe.`);
+            }
+            return producto;
         }
     },
     Mutation: {
@@ -59,6 +76,40 @@ const resolvers = {
             return {
                 token:crearToken(existeUsuario, process.env.FIRMA_SECRETA, '360000'),
             }
+        },
+        nuevoProducto: async (_, { input })=> {
+            try {
+                const producto = new Producto(input);
+
+                //Grabar en la Base de Datos
+                const  resultado = await producto.save();
+
+                return resultado;
+
+            } catch (error) {
+                console.log(error);
+            }
+        },
+        actualizarProducto: async (_, { id, input }) => {
+            //Verificar que el producto existe
+            let producto = await Producto.findById(id);
+            if(!producto){
+                throw new Error(`El producto con ese ID: ${id},  no existe.`);
+            }
+            //Guardarlo en la Base de Datos
+            producto = await Producto.findOneAndUpdate({_id: id},input,{new: true});
+
+            return producto;
+        },
+        eliminarProducto: async (_, { id } ) => {
+            //Verificar que el producto existe
+            let producto = await Producto.findById(id);
+            if(!producto){
+                throw new Error(`El producto con ese ID: ${id},  no existe.`);
+            }
+            //Eliminarlo de la Base de Datos
+            await  Producto.findOneAndDelete({_id: id});
+            return 'Producto Eliminado!!!'
         }
     }
 }
