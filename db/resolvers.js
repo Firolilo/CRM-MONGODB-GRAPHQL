@@ -68,6 +68,33 @@ const resolvers = {
                 throw new Error(`El empleado con ese ID: ${id}, no existe`);
             }
             return emp;
+        },
+        obtenerCliente: async (_, __, ctx) => {
+            try {
+                const clientes = await Cliente.find({ vendedor: ctx.usuario.id });
+                return clientes;
+            } catch (error) {
+                console.log(error);
+                throw new Error("Hubo un error al obtener los clientes");
+            }
+        },
+        obtenerClientePorID: async (_, { id }, ctx) => {
+            try {
+                const cliente = await Cliente.findById(id);
+                if (!cliente) {
+                    throw new Error("El cliente no existe");
+                }
+
+                // Verificar que el cliente pertenece al vendedor autenticado
+                if (cliente.vendedor.toString() !== ctx.usuario.id) {
+                    throw new Error("No tienes las credenciales para ver este cliente");
+                }
+
+                return cliente;
+            } catch (error) {
+                console.log(error);
+                throw new Error("Hubo un error al obtener el cliente");
+            }
         }
     },
     Mutation: {
@@ -109,7 +136,7 @@ const resolvers = {
 
             //Crear el token
             return {
-                token:crearToken(existeUsuario, process.env.FIRMA_SECRETA, '360000'),
+                token:crearToken(existeUsuario, process.env.FIRMA_SECRETA, '360000000000000000000000000000000'),
             }
         },
         nuevoProducto: async (_, { input })=> {

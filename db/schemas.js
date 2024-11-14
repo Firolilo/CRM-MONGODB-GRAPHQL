@@ -19,6 +19,11 @@ type Query {
     # -- Empleado -- #
     obtenerEmpleado: [Empleado]
     obtenerEmpleadoPorID(id: ID!): Empleado
+    
+    # -- Cliente -- #
+    obtenerCliente: [Cliente]
+    obtenerClientePorID(id: ID!): Cliente
+    
 }
 
 # -- Types -- #
@@ -146,7 +151,7 @@ type Mutation {
     
     # -- Clientes -- #
     nuevoCliente(input:inputCliente): Cliente
-    actualizarCliente(id: ID!, input: ClienteInput): Cliente
+    actualizarCliente(id: ID!, input: inputCliente): Cliente
     eliminarCliente(id: ID!): String
 }
 `;
