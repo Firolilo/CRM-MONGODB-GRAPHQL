@@ -11,6 +11,14 @@ type Query {
     # -- Producto -- #
     obtenerProducto: [Producto]
     obtenerProductoPorID (id: ID!): Producto
+    
+    # -- Persona -- #
+    obtenerPersona: [Persona]
+    obtenerPersonaPorID (id: ID!): Persona
+    
+    # -- Empleado -- #
+    obtenerEmpleado: [Empleado]
+    obtenerEmpleadoPorID(id: ID!): Empleado
 }
 
 # -- Types -- #
@@ -35,6 +43,35 @@ type Producto {
     creado: String
 }
 
+type Persona {
+    id: ID
+    nombre: String
+    nivel: Int
+    arcano: String
+    registrado: String
+}
+
+type Empleado {
+    id: ID
+    nombre: String
+    apellido: String
+    ci: String
+    email: String
+    salario: Float
+    bono: Float
+    creado: String
+}
+
+type Cliente {
+    id: ID
+    nombre: String!
+    apellido: String!
+    email: String!
+    empresa: String
+    telefono: String
+    vendedor: ID
+}
+
 # -- Inputs -- #
 
 input inputUsuario{
@@ -55,17 +92,62 @@ input ProductoInput {
     precio: Float!
 }
 
+input PersonaInput {
+    nombre: String!
+    nivel: Int!
+    arcano: String!
+}
+
+input EmpleadoInput {
+    nombre: String!
+    apellido: String!
+    ci: String!
+    email: String!
+    salario: Float!
+    bono: Float!
+}
+
+input inputAutenticarPersona{
+    nombre: String
+    arcano: String
+}
+
+input inputCliente{
+    nombre: String!
+    apellido: String!
+    email: String!
+    empresa: String
+    telefono: String
+}
+
+
 # -- Mutation -- #
 
 type Mutation {
-    # -- Usuario --
+    # -- Usuario -- #
     nuevoUsuario(input:inputUsuario) : Usuario
     autenticarUsuario(input:inputAutenticar) : Token
     
-    # -- Producto --
+    # -- Producto -- #
     nuevoProducto(input: ProductoInput ): Producto
     actualizarProducto(id: ID!, input: ProductoInput): Producto
     eliminarProducto (id: ID!): String
+    
+    # -- Persona -- #
+    nuevaPersona(input: PersonaInput): Persona
+    actualizarPersona(id: ID!, input: PersonaInput): Persona
+    eliminarPersona (id: ID!): String
+    autenticarPersona(input:inputAutenticar) : Token
+    
+    # -- Empleado -- #
+    nuevoEmpleado(input: EmpleadoInput): Empleado
+    actualizarEmpleado(id: ID!, input: EmpleadoInput): Empleado
+    eliminarEmpleado(id: ID!): String
+    
+    # -- Clientes -- #
+    nuevoCliente(input:inputCliente): Cliente
+    actualizarCliente(id: ID!, input: ClienteInput): Cliente
+    eliminarCliente(id: ID!): String
 }
 `;
 module.exports = typeDefs;

@@ -1,5 +1,8 @@
 const Usuario = require('../models/usuario');
 const Producto = require('../models/producto');
+const Persona = require('../models/persona');
+const Empleado = require('../models/empleado');
+const Cliente = require('../models/cliente');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -33,6 +36,38 @@ const resolvers = {
                 throw new Error(`El producto con ese ID: ${id},  no existe.`);
             }
             return producto;
+        },
+        obtenerPersona: async () =>
+        {
+            try{
+                const personas = await Persona.find({});
+                return personas;
+            } catch (e) {
+                console.log(e);
+            }
+        },
+        obtenerPersonaPorID: async (_, { id }) => {
+            const persona = await Persona.findById(id);
+            if(!persona){
+                throw new Error(`La persona con ese ID: ${id}, no existe.`);
+            }
+            return persona;
+        },
+        obtenerEmpleado: async () => {
+            try {
+                const emps = await Empleado.find({});
+                return emps;
+            } catch (e) {
+                console.log(e);
+            }
+        },
+        obtenerEmpleadoPorID: async () => {
+            const emp = await Empleado.findById(id);
+            if(!emp)
+            {
+                throw new Error(`El empleado con ese ID: ${id}, no existe`);
+            }
+            return emp;
         }
     },
     Mutation: {
@@ -110,6 +145,156 @@ const resolvers = {
             //Eliminarlo de la Base de Datos
             await  Producto.findOneAndDelete({_id: id});
             return 'Producto Eliminado!!!'
+        },
+        nuevaPersona: async (_, { input }) => {
+            try{
+                const persona = new Persona(input);
+                const resultado  = await persona.save();
+                return resultado;
+            } catch (error)
+            {
+                console.error(error);
+            }
+        },
+        actualizarPersona: async (_, {id, input}) => {
+            let persona = await Persona.findById(id);
+            if(!persona){
+                throw new Error(`La persona con ese ID: ${id},  no existe.`);
+            }
+            //Guardarlo en la Base de Datos
+            persona = await Persona.findOneAndUpdate({_id: id},input,{new: true});
+
+            return persona;
+        },
+        eliminarPersona: async (_, { id } ) => {
+            //Verificar que el producto existe
+            let persona = await Persona.findById(id);
+            if(!persona){
+                throw new Error(`El producto con ese ID: ${id},  no existe.`);
+            }
+            //Eliminarlo de la Base de Datos
+            await  Persona.findOneAndDelete({_id: id});
+            return 'Producto Eliminado!!!'
+        },
+        nuevoEmpleado: async (_, { input }) => {
+            const {email, ci} = input;
+
+            if(input.bono < 0)
+            {
+                throw new Error(`El bono no puede ser negativo`);
+            }
+            if(input.salario < 0)
+            {
+                throw new Error(`El salario no puede ser negativo`);
+            }
+            if(input.salario <= input.bono)
+            {
+                throw new Error(`El bono no puede ser mayor o igual que el salario`);
+            }
+            const existeEmpe = await Empleado.findOne({email});
+            if (existeEmpe) {
+                throw new Error('El empleado con ese email existe');
+            }
+            const existeEmpc = await Empleado.findOne({ci});
+            if (existeEmpc) {
+                throw new Error('El empleado con ese ci existe');
+            }
+
+            try{
+                const emp = new Empleado(input);
+
+                const resultado  = await emp.save();
+                return resultado;
+            } catch (error)
+            {
+                console.error(error);
+            }
+        },
+        actualizarEmpleado: async (_, {id,input}) => {
+            let emp = await Empleado.findById(id);
+            if(!emp){
+                throw new Error(`La empleado con ese ID: ${id},  no existe.`);
+            }
+
+
+            if(input.bono < 0)
+            {
+                throw new Error(`El bono no puede ser negativo`);
+            }
+            if(input.salario < 0)
+            {
+                throw new Error(`El salario no puede ser negativo`);
+            }
+            if(input.salario <= input.bono)
+            {
+                throw new Error(`El bono no puede ser mayor o igual que el salario`);
+            }
+            try {
+                emp = await Empleado.findOneAndUpdate({_id: id}, input, {new: true});
+                return emp;
+            } catch (e)
+            {
+                console.log(e);
+            }
+
+        },
+        eliminarEmpleado: async (_, { id } ) => {
+            //Verificar que el producto existe
+            let emp = await Empleado.findById(id);
+            if(!emp){
+                throw new Error(`El empleado con ese ID: ${id},  no existe.`);
+            }
+
+            //Eliminarlo de la Base de Datos
+            await  Empleado.findOneAndDelete({_id: id});
+            return 'Empleado Eliminado!!!'
+        },
+        nuevoCliente: async (_,{input}, ctx) => {
+            const {email, apellido, nombre} = input;
+            const existeCliente = await Cliente.findOne({email});
+            if(existeCliente){
+                throw new Error('El cliente ya esiste');
+            }
+            //Asignar un vendedor a ese cliente (Necesito registrar a que vendedor pertenece este cliente)
+            const nuevoCliente = new Cliente(input)
+            nuevoCliente.vendedor = ctx.usuario.id;
+            try{
+                return await nuevoCliente.save();
+            } catch (e) {
+                console.log(e);
+            }
+        },
+        actualizarCliente: async (_, {id,input}, ctx) => {
+            let cliente = await Cliente.findById(id);
+            if(!cliente){
+                throw new Error(`El cliente con ese ID: ${id},  no existe.`);
+            }
+            const actCliente = new Cliente(input);
+            actCliente.vendedor = ctx.usuario.id;
+            //Guardarlo en la Base de Datos
+            cliente = await Persona.findOneAndUpdate({_id: id},actCliente,{new: true});
+
+            return cliente;
+        },
+        eliminarCliente: async (_, { id }, ctx) => {
+            // Verificar si el cliente existe
+            let cliente = await Cliente.findById(id);
+            if (!cliente) {
+                throw new Error(`El cliente con ID: ${id}, no existe.`);
+            }
+
+            // Verificar que el usuario que intenta eliminar el cliente sea el mismo que lo creó
+            if (cliente.vendedor.toString() !== ctx.usuario.id) {
+                throw new Error('No tienes las credenciales para eliminar este cliente');
+            }
+
+            // Proceder a eliminar el cliente
+            try {
+                await Cliente.findByIdAndDelete(id);
+                return "Cliente eliminado correctamente";
+            } catch (error) {
+                console.log(error);
+            }
         }
     }
 }
